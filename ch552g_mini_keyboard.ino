@@ -5,6 +5,8 @@
 //lib include
 #include "src/neo/neo.h"
 #include "src/userUsbHidKeyboardMouse/USBHIDKeyboardMouse.h"
+#include <Serial.h>
+
 
 //app include
 #include "src/auto_mode.h"
@@ -13,6 +15,7 @@
 #include "src/keyboard.h"
 #include "src/led.h"
 #include "src/util.h"
+
 
 // Button (Mechnical, left to right)
 #define PIN_BTN_1 11
@@ -27,15 +30,15 @@
 #define LED_PIN 34 // Pin for the LED strip, configure neo leds in src/neo/config.h
 
 
-
-
 // ===================================================================================
 // Main section
-// ============================================================================
+// ===================================================================================
 // Initialize pins
 void setup()
 {
-
+  // Initialize serial communication
+  Serial.begin(115200);
+  
   // Initialize neopixels
   NEO_init();
   delay(10);
@@ -58,11 +61,11 @@ void setup()
   USBInit();
 }
 
-
-//Main loop, read buttons
 void loop()
 {
-
+  // Check for serial commands
+  handle_serial_commands();
+  
   //task update
   buttons_update();
   auto_update();
@@ -71,4 +74,42 @@ void loop()
 
   //debouncing
   delay(5); 
+}
+
+// Handle commands from the host application
+void handle_serial_commands() {
+  if (Serial.available() > 0) {
+    String command = Serial.readString();
+    
+    // Simple command protocol for configuration:
+    // First byte indicates command type
+    if (command.length() > 0) {
+      char commandByte = command.charAt(0);
+      
+      switch (commandByte) {
+        case 'C': // Configuration command
+          // When implementing this, we could parse the configuration from the serial data
+          // For now we'll just acknowledge receipt
+          Serial.println("Configuration received");
+          break;
+        case 'R': // Reset command
+          // Returns current configuration state
+          Serial.println("Configuration reset");
+          break;
+        case 'S': // Status command 
+          // Return device status
+          Serial.print("Device status: ");
+          if (keyboard_has_configuration_override()) {
+            Serial.println("OVERRIDDEN");
+          } else {
+            Serial.println("DEFAULT");
+          }
+          break;
+        default:
+          Serial.println("Unknown command");
+          Serial.println("Commands: C(Configure), R(Reset), S(Status)");
+          break;
+      }
+    }
+  }
 }

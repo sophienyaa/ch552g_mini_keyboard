@@ -38,7 +38,8 @@ typedef struct
 {
   mouse_event_type_t type;
   uint8_t value;
-} mouse_event_t;
+}
+mouse_event_t;
  
 //Send button sequence with delay, if length is 0, send release when released
 typedef struct 

@@ -9,7 +9,7 @@
 
 static int current_mode_s = 0;                                       // current mode of keyboard
 static int menu_mode_s = 0;                                          // during menu coice
-
+static const keyboard_configuration_t* override_config_s = NULL;     // override configuration pointer
 
 static void set_menu_led(void);
 static void enter_menu(void);
@@ -173,33 +173,36 @@ void keyboard_press_button(keyboard_button_t button, keyboard_button_keyboard_mo
     }
   }
 
-  switch (configurations[current_mode_s].button[button].type)
+  // Get the configuration to use (either override or default)
+  const keyboard_configuration_t* config_to_use = override_config_s != NULL ? override_config_s : &configurations[current_mode_s];
+  
+  switch (config_to_use->button[button].type)
   {
   case BUTTON_SEQUENCE:
-    keyboard_run_key_sequence(configurations[current_mode_s].button[button].function.sequence, mode);
+    keyboard_run_key_sequence(config_to_use->button[button].function.sequence, mode);
     break;
   case BUTTON_MOUSE:
-    keyboard_run_mouse_sequence(configurations[current_mode_s].button[button].function.mouse, mode);
+    keyboard_run_mouse_sequence(config_to_use->button[button].function.mouse, mode);
     break;
   case BUTTON_AUTO_KEYBOARD:
     if (mode == BTM_PRESS)
     {
-      auto_set_cycle(configurations[current_mode_s].button[button]);
+      auto_set_cycle(config_to_use->button[button]);
     }
     break;
   case BUTTON_AUTO_MOUSE:
     if (mode == BTM_PRESS)
     {
-      auto_set_cycle(configurations[current_mode_s].button[button]);
+      auto_set_cycle(config_to_use->button[button]);
     }
     break;
   case BUTTON_FUNCTION:
-    configurations[current_mode_s].button[button].function.functionPointer(mode);
+    config_to_use->button[button].function.functionPointer(mode);
     break;
   case BUTTON_NULL:
     if (mode == BTM_PRESS)
     {
-      auto_set_cycle(configurations[current_mode_s].button[button]);
+      auto_set_cycle(config_to_use->button[button]);
     }
     break;
   default:
@@ -210,4 +213,20 @@ void keyboard_press_button(keyboard_button_t button, keyboard_button_keyboard_mo
 void keyboard_setup()
 {
 
+}
+
+// Host control functions
+void keyboard_set_configuration_override(const keyboard_configuration_t* config)
+{
+  override_config_s = config;
+}
+
+void keyboard_clear_configuration_override(void)
+{
+  override_config_s = NULL;
+}
+
+bool keyboard_has_configuration_override(void)
+{
+  return override_config_s != NULL;
 }
