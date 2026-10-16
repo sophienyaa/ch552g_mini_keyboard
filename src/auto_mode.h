@@ -1,11 +1,11 @@
 #pragma once
 
-#include "keyboard.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+void auto_update(void);
 
-// auto mode function, cycle the button sequence
-void auto_set_cycle(button_function_t button_auto);
-
-// update auto mode task
-void auto_update( void );
-
+#ifdef __cplusplus
+}
+#endif

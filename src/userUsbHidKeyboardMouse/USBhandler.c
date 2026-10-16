@@ -25,6 +25,9 @@ __data uint8_t SetupReq;
 volatile __xdata uint8_t UsbConfig;
 
 __code uint8_t *__data pDescr;
+__xdata uint8_t *__data pTxData;
+
+#include "../protocol.h"
 
 volatile uint8_t usbMsgFlags = 0; // uint8_t usbMsgFlags copied from VUSB
 
@@ -55,6 +58,35 @@ void USB_EP0_SETUP() {
       }
       case USB_REQ_TYP_CLASS: {
         switch (SetupReq) {
+        case 0x01: { // HID_GET_REPORT
+          uint8_t reportId = UsbSetupBuf->wValueL;
+          pTxData = protocol_handle_get_report(reportId, &len);
+          if (SetupLen > len) {
+            SetupLen = len;
+          }
+          len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;
+          for (__data uint8_t i = 0; i < len; i++) {
+            Ep0Buffer[i] = pTxData[i];
+          }
+          SetupLen -= len;
+          pTxData += len;
+          break;
+        }
+        case 0x09: { // HID_SET_REPORT
+          uint8_t reportId = UsbSetupBuf->wValueL;
+          protocol_start_set_report(reportId, SetupLen);
+          len = 0;
+          break;
+        }
+        case 0x0A: { // HID_SET_IDLE
+          len = 0;
+          break;
+        }
+        case 0x02: { // HID_GET_IDLE
+          Ep0Buffer[0] = 0;
+          len = 1;
+          break;
+        }
         default:
           len = 0xFF; // command not supported
           break;
@@ -314,6 +346,18 @@ void USB_EP0_IN() {
     UEP0_T_LEN = len;
     UEP0_CTRL ^= bUEP_T_TOG; // Switch between DATA0 and DATA1
   } break;
+  case 0x01: { // HID_GET_REPORT
+    __data uint8_t len = SetupLen >= DEFAULT_ENDP0_SIZE
+                             ? DEFAULT_ENDP0_SIZE
+                             : SetupLen; // send length
+    for (__data uint8_t i = 0; i < len; i++) {
+      Ep0Buffer[i] = pTxData[i];
+    }
+    SetupLen -= len;
+    pTxData += len;
+    UEP0_T_LEN = len;
+    UEP0_CTRL ^= bUEP_T_TOG; // Switch between DATA0 and DATA1
+  } break;
   case USB_SET_ADDRESS:
     USB_DEV_AD = USB_DEV_AD & bUDA_GP_BIT | SetupLen;
     UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
@@ -326,10 +370,17 @@ void USB_EP0_IN() {
 }
 
 void USB_EP0_OUT() {
-  {
-    UEP0_T_LEN = 0;
-    UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_NAK; // Respond Nak
+  if (SetupReq == 0x09) { // HID_SET_REPORT
+    __data uint8_t rxLen = USB_RX_LEN;
+    protocol_receive_chunk(Ep0Buffer, rxLen);
+    if (SetupLen > rxLen) {
+      SetupLen -= rxLen;
+    } else {
+      SetupLen = 0;
+    }
   }
+  UEP0_T_LEN = 0;
+  UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_NAK; // Respond Nak
 }
 
 #pragma save

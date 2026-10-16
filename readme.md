@@ -41,6 +41,21 @@ This firmware uses the Arduino platform to simplify the build process. I built i
 5. Set the keyboard in bootloader mode (see below).
 6. Flash the project. (*Original firmware will be completed lost*)
 
+### Building & Flashing via Arduino CLI
+
+```bash
+# Compile firmware
+arduino-cli compile -b CH55xDuino:mcs51:ch552:usb_settings=user148,upload_method=usb,clock=16internal,bootloader_pin=p36 .
+
+# Flash firmware (with board in bootloader mode)
+arduino-cli upload -b CH55xDuino:mcs51:ch552:usb_settings=user148,upload_method=usb,clock=16internal,bootloader_pin=p36 .
+```
+
+### WebHID Configurator (Dynamic Keybindings)
+
+Open `tools/index.html` directly in Google Chrome or Microsoft Edge to customize your keybindings dynamically over WebHID. All keybinding configurations are saved directly to the CH552's internal 128-byte DataFlash EEPROM!
+
+
 ## Setting up the Keyboard in Bootloader Mode
 
 To enter bootloader mode, CH552G require connect pin P3.6 to vcc with a 10K pull-up resistor. To do this:

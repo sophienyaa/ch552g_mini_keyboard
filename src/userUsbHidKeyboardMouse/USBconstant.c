@@ -151,6 +151,33 @@ __code uint8_t ReportDescriptor[] = {
     0x95, 0x03,       //     REPORT_COUNT (3)
     0x81, 0x06,       //     INPUT (Data,Var,Rel)
     0xc0,             //     END_COLLECTION
+    0xc0,             // END_COLLECTION
+
+    // Feature Report (ID 3) for Host Configuration (28 bytes)
+    0x06, 0x00, 0xff, // USAGE_PAGE (Vendor Defined 0xFF00)
+    0x09, 0x01,       // USAGE (Vendor Usage 1)
+    0xa1, 0x01,       // COLLECTION (Application)
+    0x85, 0x03,       //   REPORT_ID (3)
+    0x09, 0x02,       //   USAGE (Vendor Usage 2)
+    0x15, 0x00,       //   LOGICAL_MINIMUM (0)
+    0x26, 0xff, 0x00, //   LOGICAL_MAXIMUM (255)
+    0x75, 0x08,       //   REPORT_SIZE (8)
+    0x95, 0x1c,       //   REPORT_COUNT (28)
+    0xb1, 0x02,       //   FEATURE (Data,Var,Abs)
+    0xc0,             // END_COLLECTION
+
+    // Consumer Control (ID 4) for Media Keys
+    0x05, 0x0c,       // USAGE_PAGE (Consumer Devices)
+    0x09, 0x01,       // USAGE (Consumer Control)
+    0xa1, 0x01,       // COLLECTION (Application)
+    0x85, 0x04,       //   REPORT_ID (4)
+    0x15, 0x00,       //   LOGICAL_MINIMUM (0)
+    0x26, 0x9c, 0x02, //   LOGICAL_MAXIMUM (0x029c)
+    0x19, 0x00,       //   USAGE_MINIMUM (0)
+    0x2a, 0x9c, 0x02, //   USAGE_MAXIMUM (0x029c)
+    0x75, 0x10,       //   REPORT_SIZE (16)
+    0x95, 0x01,       //   REPORT_COUNT (1)
+    0x81, 0x00,       //   INPUT (Data,Ary,Abs)
     0xc0              // END_COLLECTION
 };
 

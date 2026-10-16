@@ -2,4 +2,12 @@
 #include <stdint.h>
 #include "src/keyboard.h"
 
-extern const keyboard_configuration_t configurations[NUM_CONFIGURATION];
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern const compact_profile_t default_profiles[NUM_PROFILES];
+
+#ifdef __cplusplus
+}
+#endif

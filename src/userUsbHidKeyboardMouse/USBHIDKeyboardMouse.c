@@ -18,6 +18,7 @@ volatile __xdata uint8_t UpPoint1_Busy =
 
 __xdata uint8_t HIDKey[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 __xdata uint8_t HIDMouse[4] = {0x0, 0x0, 0x0, 0x0};
+__xdata uint16_t HIDConsumer = 0;
 
 #define SHIFT 0x80
 __code uint8_t _asciimap[128] = {
@@ -206,6 +207,11 @@ uint8_t USB_EP1_send(__data uint8_t reportID) {
       Ep1Buffer[64 + 1 + i] = ((uint8_t *)HIDMouse)[i];
     }
     UEP1_T_LEN = 1 + sizeof(HIDMouse); // data length
+  } else if (reportID == 4) {
+    Ep1Buffer[64 + 0] = 4;
+    Ep1Buffer[64 + 1] = (uint8_t)(HIDConsumer & 0xFF);
+    Ep1Buffer[64 + 2] = (uint8_t)((HIDConsumer >> 8) & 0xFF);
+    UEP1_T_LEN = 3;
   } else {
     UEP1_T_LEN = 0;
   }
@@ -342,3 +348,23 @@ uint8_t Mouse_scroll(__data int8_t tilt) {
   USB_EP1_send(2);
   return 1;
 }
+
+uint8_t Consumer_press(uint16_t k) {
+  HIDConsumer = k;
+  USB_EP1_send(4);
+  return 1;
+}
+
+uint8_t Consumer_release(void) {
+  HIDConsumer = 0;
+  USB_EP1_send(4);
+  return 1;
+}
+
+uint8_t Consumer_click(uint16_t k) {
+  Consumer_press(k);
+  delayMicroseconds(10000);
+  Consumer_release();
+  return 1;
+}
+

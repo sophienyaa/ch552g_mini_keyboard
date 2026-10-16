@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH552G Mini Keyboard Configurator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge.connected {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f172a;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+    }
+
+    .profile-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
+
+    .profile-tab {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .profile-tab.active {
+      background: #334155;
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .pad-visualizer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+      padding: 2rem;
+      background: #0b1120;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+    }
+
+    .key-btn {
+      width: 80px;
+      height: 80px;
+      background: #1e293b;
+      border: 2px solid #475569;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 700;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    }
+
+    .key-btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .key-btn.selected {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.15);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .key-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .key-summary {
+      font-size: 0.85rem;
+      color: var(--accent);
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%;
+      white-space: nowrap;
+    }
+
+    .encoder-dial {
+      width: 95px;
+      height: 95px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 3px dashed #475569;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .encoder-dial:hover {
+      border-color: var(--accent);
+      transform: rotate(15deg);
+    }
+
+    .encoder-dial.selected {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.15);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    select, input[type="text"], input[type="number"] {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--accent);
+    }
+
+    .modifier-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .mod-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      background: #1e293b;
+      border: 1px solid var(--accent);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>⌨️ CH552G MacroPad Configurator</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+          Dynamic WebHID Keybinding Editor for CH552 8051 Microcontrollers
+        </p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span id="connStatus" class="status-badge">
+          <span class="status-dot"></span>
+          <span id="connText">Disconnected</span>
+        </span>
+        <button id="btnConnect" class="btn btn-primary" onclick="toggleConnect()">Connect Keyboard</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <div id="browserWarning" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.25rem;">
+        <h4 style="color: var(--danger); font-size: 0.95rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
+          ⚠️ Browser Not Supported for WebHID
+        </h4>
+        <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+          Your current browser (such as <strong>Firefox</strong> or <strong>Safari</strong>) does not support the <strong>WebHID API</strong>.
+          <br>
+          Please open this configurator in <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, or <strong>Brave</strong>:
+          <br>
+          <code style="display: inline-block; background: #0f172a; padding: 0.35rem 0.75rem; border-radius: 4px; margin-top: 0.4rem; color: var(--accent); font-family: monospace;">
+            open -a "Google Chrome" tools/index.html
+          </code>
+        </p>
+      </div>
+
+      <div class="profile-tabs">
+        <button class="profile-tab active" onclick="selectProfile(0)">Profile 1 (Office)</button>
+        <button class="profile-tab" onclick="selectProfile(1)">Profile 2 (Media)</button>
+        <button class="profile-tab" onclick="selectProfile(2)">Profile 3 (Photoshop)</button>
+        <button class="profile-tab" onclick="selectProfile(3)">Profile 4 (Browser)</button>
+      </div>
+
+      <div class="pad-visualizer">
+        <div id="btnKey1" class="key-btn selected" onclick="selectControl(0)">
+          <span class="key-label">KEY 1</span>
+          <span id="summary0" class="key-summary">Ctrl+C</span>
+        </div>
+        <div id="btnKey2" class="key-btn" onclick="selectControl(1)">
+          <span class="key-label">KEY 2</span>
+          <span id="summary1" class="key-summary">Ctrl+V</span>
+        </div>
+        <div id="btnKey3" class="key-btn" onclick="selectControl(2)">
+          <span class="key-label">KEY 3</span>
+          <span id="summary2" class="key-summary">Ctrl+Z</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
+          <div id="btnEncPress" class="encoder-dial" onclick="selectControl(5)">
+            <span class="key-label" style="font-size: 0.7rem;">ENCODER</span>
+            <span id="summary5" class="key-summary">Menu</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="selectControl(4)">↺ CCW</button>
+            <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="selectControl(3)">↻ CW</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Configurator -->
+      <div id="editorPanel" style="background: #0f172a; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+        <h3 id="editingTargetTitle" style="font-size: 1rem; margin-bottom: 1rem; color: var(--accent);">
+          Configuring: KEY 1
+        </h3>
+
+        <div class="config-grid">
+          <div class="form-group">
+            <label>Action Category</label>
+            <select id="selCategory" onchange="onCategoryChange()">
+              <option value="1">Keyboard Shortcut / Combo</option>
+              <option value="2">Consumer / Media Control</option>
+              <option value="3">Mouse Action (Click / Scroll)</option>
+              <option value="4">Special Function / System</option>
+              <option value="0">None / Disabled</option>
+            </select>
+          </div>
+
+          <!-- Keyboard Sub-form -->
+          <div id="secKeyboard" class="form-group">
+            <label>Primary Key</label>
+            <select id="selKeycode" onchange="updateCurrentAction()"></select>
+            <div class="modifier-group">
+              <label class="mod-checkbox"><input type="checkbox" id="modCtrl" onchange="updateCurrentAction()"> Ctrl</label>
+              <label class="mod-checkbox"><input type="checkbox" id="modShift" onchange="updateCurrentAction()"> Shift</label>
+              <label class="mod-checkbox"><input type="checkbox" id="modAlt" onchange="updateCurrentAction()"> Alt</label>
+              <label class="mod-checkbox"><input type="checkbox" id="modGui" onchange="updateCurrentAction()"> Win/Cmd</label>
+            </div>
+          </div>
+
+          <!-- Consumer Sub-form -->
+          <div id="secConsumer" class="form-group" style="display: none;">
+            <label>Media Command</label>
+            <select id="selConsumer" onchange="updateCurrentAction()">
+              <option value="1">Volume Up</option>
+              <option value="2">Volume Down</option>
+              <option value="3">Mute Audio</option>
+              <option value="4">Play / Pause</option>
+              <option value="5">Next Track</option>
+              <option value="6">Previous Track</option>
+              <option value="7">Brightness Up</option>
+              <option value="8">Brightness Down</option>
+            </select>
+          </div>
+
+          <!-- Mouse Sub-form -->
+          <div id="secMouse" class="form-group" style="display: none;">
+            <label>Mouse Event</label>
+            <select id="selMouseAct" onchange="updateCurrentAction()">
+              <option value="4">Scroll Up</option>
+              <option value="5">Scroll Down</option>
+              <option value="1">Left Click</option>
+              <option value="2">Right Click</option>
+              <option value="3">Middle Click</option>
+            </select>
+          </div>
+
+          <!-- Special Sub-form -->
+          <div id="secSpecial" class="form-group" style="display: none;">
+            <label>Special Function</label>
+            <select id="selSpecial" onchange="updateCurrentAction()">
+              <option value="1">Encoder Hold: Open Menu</option>
+              <option value="2">Switch to Next Profile</option>
+              <option value="3">Switch to Previous Profile</option>
+              <option value="4">Enter USB Bootloader</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary" onclick="readProfileFromDevice()">📥 Read from Device</button>
+          <button class="btn btn-primary" onclick="writeProfileToDevice()">💾 Save to Device (DataFlash)</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-danger" onclick="restoreDefaults()">Factory Defaults</button>
+          <button class="btn btn-danger" onclick="jumpBootloader()">Bootloader Mode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Profile Saved Successfully!</div>
+
+  <script>
+    const VENDOR_ID = 0x1209;
+    const PRODUCT_ID = 0xc55D;
+    const FEATURE_REPORT_ID = 3;
+
+    let hidDevice = null;
+    let currentProfileIdx = 0;
+    let currentControlIdx = 0;
+
+    // Profiles model (4 profiles x 6 buttons x 4 bytes)
+    const profiles = [
+      // Profile 0: Office
+      [
+        { type: 1, param1: 1, param2: 99, param3: 0 },  // Ctrl + c
+        { type: 1, param1: 1, param2: 118, param3: 0 }, // Ctrl + v
+        { type: 1, param1: 1, param2: 122, param3: 0 }, // Ctrl + z
+        { type: 3, param1: 5, param2: 2, param3: 0 },   // Scroll Down
+        { type: 3, param1: 4, param2: 2, param3: 0 },   // Scroll Up
+        { type: 4, param1: 1, param2: 0, param3: 0 },   // Special Menu
+      ],
+      // Profile 1: Media
+      [
+        { type: 2, param1: 6, param2: 0, param3: 0 },   // Prev Track
+        { type: 2, param1: 4, param2: 0, param3: 0 },   // Play / Pause
+        { type: 2, param1: 5, param2: 0, param3: 0 },   // Next Track
+        { type: 2, param1: 1, param2: 0, param3: 0 },   // Vol Up
+        { type: 2, param1: 2, param2: 0, param3: 0 },   // Vol Down
+        { type: 4, param1: 1, param2: 0, param3: 0 },   // Menu
+      ],
+      // Profile 2: Photoshop
+      [
+        { type: 1, param1: 0, param2: 101, param3: 0 }, // 'e'
+        { type: 1, param1: 0, param2: 115, param3: 0 }, // 's'
+        { type: 3, param1: 1, param2: 1, param3: 4 },   // Alt + Left Click
+        { type: 3, param1: 5, param2: 2, param3: 0 },   // Scroll Down
+        { type: 3, param1: 4, param2: 2, param3: 0 },   // Scroll Up
+        { type: 4, param1: 1, param2: 0, param3: 0 },   // Menu
+      ],
+      // Profile 3: Browser
+      [
+        { type: 1, param1: 3, param2: 0xB3, param3: 0 }, // Ctrl+Shift+Tab
+        { type: 1, param1: 1, param2: 0xB3, param3: 0 }, // Ctrl+Tab
+        { type: 1, param1: 1, param2: 119, param3: 0 },  // Ctrl+W
+        { type: 3, param1: 5, param2: 2, param3: 0 },    // Scroll Down
+        { type: 3, param1: 4, param2: 2, param3: 0 },    // Scroll Up
+        { type: 4, param1: 1, param2: 0, param3: 0 },    // Menu
+      ]
+    ];
+
+    const controlNames = ["KEY 1", "KEY 2", "KEY 3", "ENCODER CW", "ENCODER CCW", "ENCODER PRESS"];
+
+    const keyList = [
+      { name: "a", code: 97 }, { name: "b", code: 98 }, { name: "c", code: 99 }, { name: "d", code: 100 },
+      { name: "e", code: 101 }, { name: "f", code: 102 }, { name: "g", code: 103 }, { name: "h", code: 104 },
+      { name: "i", code: 105 }, { name: "j", code: 106 }, { name: "k", code: 107 }, { name: "l", code: 108 },
+      { name: "m", code: 109 }, { name: "n", code: 110 }, { name: "o", code: 111 }, { name: "p", code: 112 },
+      { name: "q", code: 113 }, { name: "r", code: 114 }, { name: "s", code: 115 }, { name: "t", code: 116 },
+      { name: "u", code: 117 }, { name: "v", code: 118 }, { name: "w", code: 119 }, { name: "x", code: 120 },
+      { name: "y", code: 121 }, { name: "z", code: 122 },
+      { name: "0", code: 48 }, { name: "1", code: 49 }, { name: "2", code: 50 }, { name: "3", code: 51 },
+      { name: "4", code: 52 }, { name: "5", code: 53 }, { name: "6", code: 54 }, { name: "7", code: 55 },
+      { name: "8", code: 56 }, { name: "9", code: 57 },
+      { name: "Space", code: 32 }, { name: "Enter", code: 0xB0 }, { name: "Escape", code: 0xB1 },
+      { name: "Backspace", code: 0xB2 }, { name: "Tab", code: 0xB3 }, { name: "Delete", code: 0xD4 },
+      { name: "Arrow Up", code: 0xDA }, { name: "Arrow Down", code: 0xD9 },
+      { name: "Arrow Left", code: 0xD8 }, { name: "Arrow Right", code: 0xD7 },
+      { name: "F1", code: 0xC2 }, { name: "F2", code: 0xC3 }, { name: "F3", code: 0xC4 }, { name: "F4", code: 0xC5 },
+      { name: "F5", code: 0xC6 }, { name: "F6", code: 0xC7 }, { name: "F7", code: 0xC8 }, { name: "F8", code: 0xC9 },
+      { name: "F9", code: 0xCA }, { name: "F10", code: 0xCB }, { name: "F11", code: 0xCC }, { name: "F12", code: 0xCD }
+    ];
+
+    function initKeyList() {
+      const sel = document.getElementById("selKeycode");
+      sel.innerHTML = keyList.map(k => `<option value="${k.code}">${k.name}</option>`).join("");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.innerText = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
+    }
+
+    function checkWebHIDSupport() {
+      if (!('hid' in navigator) || !navigator.hid) {
+        document.getElementById("browserWarning").style.display = "block";
+        const btn = document.getElementById("btnConnect");
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+        btn.title = "WebHID is not supported in this browser. Please use Google Chrome or Microsoft Edge.";
+        return false;
+      }
+      return true;
+    }
+
+    async function toggleConnect() {
+      if (!checkWebHIDSupport()) {
+        alert("WebHID is not supported in this browser (e.g. Firefox or Safari).\n\nPlease open this page in Google Chrome, Microsoft Edge, or Brave:\nopen -a \"Google Chrome\" tools/index.html");
+        return;
+      }
+
+      if (hidDevice) {
+        await hidDevice.close();
+        hidDevice = null;
+        updateConnStatus(false);
+        return;
+      }
+
+      try {
+        const devices = await navigator.hid.requestDevice({
+          filters: [{ vendorId: VENDOR_ID, productId: PRODUCT_ID }]
+        });
+        if (devices.length === 0) return;
+
+        hidDevice = devices[0];
+        await hidDevice.open();
+        updateConnStatus(true);
+        showToast("Connected to Mini Keyboard!");
+        await readProfileFromDevice();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect via WebHID: " + err.message);
+      }
+    }
+
+    function updateConnStatus(connected) {
+      const badge = document.getElementById("connStatus");
+      const text = document.getElementById("connText");
+      const btn = document.getElementById("btnConnect");
+      if (connected) {
+        badge.classList.add("connected");
+        text.innerText = "Connected";
+        btn.innerText = "Disconnect";
+      } else {
+        badge.classList.remove("connected");
+        text.innerText = "Disconnected";
+        btn.innerText = "Connect Keyboard";
+      }
+    }
+
+    function selectProfile(idx) {
+      currentProfileIdx = idx;
+      document.querySelectorAll(".profile-tab").forEach((t, i) => {
+        t.classList.toggle("active", i === idx);
+      });
+      refreshSummaries();
+      loadControlIntoEditor();
+    }
+
+    function selectControl(idx) {
+      currentControlIdx = idx;
+      document.querySelectorAll(".key-btn, .encoder-dial").forEach(el => el.classList.remove("selected"));
+      if (idx === 0) document.getElementById("btnKey1").classList.add("selected");
+      if (idx === 1) document.getElementById("btnKey2").classList.add("selected");
+      if (idx === 2) document.getElementById("btnKey3").classList.add("selected");
+      if (idx === 5) document.getElementById("btnEncPress").classList.add("selected");
+      loadControlIntoEditor();
+    }
+
+    function getActionLabel(act) {
+      if (!act || act.type === 0) return "None";
+      if (act.type === 1) { // Key Combo
+        const mods = [];
+        if (act.param1 & 1) mods.push("Ctrl");
+        if (act.param1 & 2) mods.push("Shift");
+        if (act.param1 & 4) mods.push("Alt");
+        if (act.param1 & 8) mods.push("GUI");
+        const k = keyList.find(x => x.code === act.param2);
+        const kname = k ? k.name : `0x${act.param2.toString(16)}`;
+        return mods.length ? `${mods.join("+")}+${kname}` : kname;
+      }
+      if (act.type === 2) { // Consumer
+        const media = ["", "Vol+", "Vol-", "Mute", "Play/Pause", "Next", "Prev", "Bright+", "Bright-"];
+        return media[act.param1] || "Media";
+      }
+      if (act.type === 3) { // Mouse
+        const m = ["", "L-Click", "R-Click", "Mid-Click", "Scroll Up", "Scroll Down"];
+        return m[act.param1] || "Mouse";
+      }
+      if (act.type === 4) { // Special
+        const s = ["", "Menu", "Next Prof", "Prev Prof", "Bootloader"];
+        return s[act.param1] || "Special";
+      }
+      return "Custom";
+    }
+
+    function refreshSummaries() {
+      const prof = profiles[currentProfileIdx];
+      for (let i = 0; i < 6; i++) {
+        const el = document.getElementById(`summary${i}`);
+        if (el) el.innerText = getActionLabel(prof[i]);
+      }
+    }
+
+    function loadControlIntoEditor() {
+      const act = profiles[currentProfileIdx][currentControlIdx];
+      document.getElementById("editingTargetTitle").innerText = `Configuring: ${controlNames[currentControlIdx]}`;
+      document.getElementById("selCategory").value = act.type;
+
+      onCategoryChange();
+
+      if (act.type === 1) {
+        document.getElementById("modCtrl").checked = !!(act.param1 & 1);
+        document.getElementById("modShift").checked = !!(act.param1 & 2);
+        document.getElementById("modAlt").checked = !!(act.param1 & 4);
+        document.getElementById("modGui").checked = !!(act.param1 & 8);
+        document.getElementById("selKeycode").value = act.param2;
+      } else if (act.type === 2) {
+        document.getElementById("selConsumer").value = act.param1;
+      } else if (act.type === 3) {
+        document.getElementById("selMouseAct").value = act.param1;
+      } else if (act.type === 4) {
+        document.getElementById("selSpecial").value = act.param1;
+      }
+    }
+
+    function onCategoryChange() {
+      const cat = parseInt(document.getElementById("selCategory").value);
+      document.getElementById("secKeyboard").style.display = (cat === 1) ? "flex" : "none";
+      document.getElementById("secConsumer").style.display = (cat === 2) ? "flex" : "none";
+      document.getElementById("secMouse").style.display = (cat === 3) ? "flex" : "none";
+      document.getElementById("secSpecial").style.display = (cat === 4) ? "flex" : "none";
+      updateCurrentAction();
+    }
+
+    function updateCurrentAction() {
+      const cat = parseInt(document.getElementById("selCategory").value);
+      const act = { type: cat, param1: 0, param2: 0, param3: 0 };
+
+      if (cat === 1) {
+        let mod = 0;
+        if (document.getElementById("modCtrl").checked) mod |= 1;
+        if (document.getElementById("modShift").checked) mod |= 2;
+        if (document.getElementById("modAlt").checked) mod |= 4;
+        if (document.getElementById("modGui").checked) mod |= 8;
+        act.param1 = mod;
+        act.param2 = parseInt(document.getElementById("selKeycode").value);
+      } else if (cat === 2) {
+        act.param1 = parseInt(document.getElementById("selConsumer").value);
+      } else if (cat === 3) {
+        act.param1 = parseInt(document.getElementById("selMouseAct").value);
+        act.param2 = 2; // Default 2 scroll steps
+      } else if (cat === 4) {
+        act.param1 = parseInt(document.getElementById("selSpecial").value);
+      }
+
+      profiles[currentProfileIdx][currentControlIdx] = act;
+      refreshSummaries();
+    }
+
+    // USB WebHID Protocol Commands
+    async function writeProfileToDevice() {
+      if (!hidDevice) {
+        alert("Please connect the keyboard first!");
+        return;
+      }
+
+      try {
+        const payload = new Uint8Array(28);
+        payload[0] = 0x03; // CMD_SET_PROFILE
+        payload[1] = currentProfileIdx;
+
+        const prof = profiles[currentProfileIdx];
+        for (let i = 0; i < 6; i++) {
+          payload[2 + i * 4 + 0] = prof[i].type;
+          payload[2 + i * 4 + 1] = prof[i].param1;
+          payload[2 + i * 4 + 2] = prof[i].param2;
+          payload[2 + i * 4 + 3] = prof[i].param3;
+        }
+
+        await hidDevice.sendFeatureReport(FEATURE_REPORT_ID, payload);
+        showToast(`Profile ${currentProfileIdx + 1} Saved to DataFlash!`);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to write to device: " + err.message);
+      }
+    }
+
+    async function readProfileFromDevice() {
+      if (!hidDevice) return;
+
+      try {
+        const query = new Uint8Array(28);
+        query[0] = 0x02; // CMD_GET_PROFILE
+        query[1] = currentProfileIdx;
+        await hidDevice.sendFeatureReport(FEATURE_REPORT_ID, query);
+
+        const res = await hidDevice.receiveFeatureReport(FEATURE_REPORT_ID);
+        const data = new Uint8Array(res.buffer);
+
+        // Parse 24 bytes of action data
+        let offset = (data[0] === FEATURE_REPORT_ID) ? 3 : 2;
+        for (let i = 0; i < 6; i++) {
+          profiles[currentProfileIdx][i] = {
+            type: data[offset + i * 4 + 0],
+            param1: data[offset + i * 4 + 1],
+            param2: data[offset + i * 4 + 2],
+            param3: data[offset + i * 4 + 3],
+          };
+        }
+
+        refreshSummaries();
+        loadControlIntoEditor();
+        showToast(`Profile ${currentProfileIdx + 1} Loaded from Keyboard!`);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function restoreDefaults() {
+      if (!confirm("Reset all keyboard profiles to factory ROM defaults?")) return;
+      if (!hidDevice) {
+        alert("Please connect the keyboard first!");
+        return;
+      }
+
+      try {
+        const payload = new Uint8Array(28);
+        payload[0] = 0x05; // CMD_RESTORE_DEFAULTS
+        await hidDevice.sendFeatureReport(FEATURE_REPORT_ID, payload);
+        await readProfileFromDevice();
+        showToast("Factory Defaults Restored!");
+      } catch (err) {
+        alert("Error resetting defaults: " + err.message);
+      }
+    }
+
+    async function jumpBootloader() {
+      if (!confirm("Reboot keyboard into USB Bootloader mode?")) return;
+      if (!hidDevice) return;
+
+      try {
+        const payload = new Uint8Array(28);
+        payload[0] = 0x06; // CMD_JUMP_BOOTLOADER
+        await hidDevice.sendFeatureReport(FEATURE_REPORT_ID, payload);
+        showToast("Rebooting to Bootloader...");
+        hidDevice = null;
+        updateConnStatus(false);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Initialize UI
+    checkWebHIDSupport();
+    initKeyList();
+    refreshSummaries();
+    loadControlIntoEditor();
+  </script>
+</body>
+</html>
+
